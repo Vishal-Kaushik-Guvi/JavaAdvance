@@ -1,5 +1,3 @@
-package SWINGS;
-
 import javax.swing.*;
 
 public class SimpleJFrame {

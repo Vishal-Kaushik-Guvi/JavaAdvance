@@ -1,5 +1,3 @@
-package AWT;
-
 import java.awt.*;
 
 public class LabelExample extends Frame{

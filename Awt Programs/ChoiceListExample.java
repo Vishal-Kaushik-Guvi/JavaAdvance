@@ -1,5 +1,3 @@
-package AWT;
-
 import java.awt.Choice;
 import java.awt.FlowLayout;
 import java.awt.Frame;
