@@ -5,59 +5,41 @@ import java.net.*;
 import java.util.*;
 
 public class ChatServer {
-    private static Set<PrintWriter> clientWriters = new HashSet<>();
-
-    public static void main(String[] args) {
-        System.out.println("Chat Server started...");
+ public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(5000)) {
+            System.out.println("Server started. Waiting for client...");
+            Socket socket = serverSocket.accept();
+            System.out.println("Client connected!");
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            Scanner sc = new Scanner(System.in);
+
+            String msgIn, msgOut;
             while (true) {
-                Socket clientSocket = serverSocket.accept();
-                System.out.println("New client connected!");
-                new ClientHandler(clientSocket).start();
+                // Receive
+                msgIn = in.readLine();
+                if (msgIn == null || msgIn.equalsIgnoreCase("exit")) {
+                    System.out.println("Client disconnected.");
+                    break;
+                }
+                System.out.println("Client: " + msgIn);
+
+                // Send
+                System.out.print("You: ");
+                msgOut = sc.nextLine();
+                out.println(msgOut);
+
+                if (msgOut.equalsIgnoreCase("exit")) {
+                    System.out.println("Chat ended by server.");
+                    break;
+                }
             }
-        } catch (IOException e) {
+
+            socket.close();
+            sc.close();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-    // Thread to handle each client
-    private static class ClientHandler extends Thread {
-        private Socket socket;
-        private PrintWriter out;
-        private BufferedReader in;
-
-        public ClientHandler(Socket socket) {
-            this.socket = socket;
-        }
-
-        public void run() {
-            try {
-                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                out = new PrintWriter(socket.getOutputStream(), true);
-
-                synchronized (clientWriters) {
-                    clientWriters.add(out);
-                }
-
-                String message;
-                while ((message = in.readLine()) != null) {
-                    System.out.println("Received: " + message);
-                    // Broadcast to all clients
-                    synchronized (clientWriters) {
-                        for (PrintWriter writer : clientWriters) {
-                            writer.println(message);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                System.out.println("Client disconnected.");
-            } finally {
-                try { socket.close(); } catch (IOException e) {}
-                synchronized (clientWriters) {
-                    clientWriters.remove(out);
-                }
-            }
-        }
-    }
 }
-
